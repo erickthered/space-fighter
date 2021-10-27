@@ -1,10 +1,10 @@
 import pygame
 import os
 
-
 def start_game():
     os.environ['SDL_VIDEO_CENTERED'] = '1'
     pygame.init()
+    pygame.mixer.init()
 
     clock = pygame.time.Clock()
     # info = pygame.display.Info() # You have to call this before pygame.display.set_mode()
@@ -26,6 +26,15 @@ def start_game():
     UFO = pygame.image.load("resources/assets/ufo.png")
     UFO = pygame.transform.scale(UFO, (50, 50))
 
+    BULLET_SOUND = pygame.mixer.Sound("resources/sounds/laser.wav")
+    ROCKET_SOUND = pygame.mixer.Sound('resources/sounds/rocket_steam1.wav')
+    COLLISSION_SOUND = pygame.mixer.Sound('resources/sounds/explosion2.wav')
+    FANFARE_SOUND = pygame.mixer.Sound('resources/sounds/fanfare2.wav')
+
+    pygame.mixer.music.load('resources/music/Happy Bee - Kevin MacLeod.mp3')
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(0.2)
+
     misiles = []
     enemies = [1]
 
@@ -34,6 +43,8 @@ def start_game():
 
     running = True
     moving = False
+    music_playing = True
+
     delta_y = 0
     delta_x = 0
 
@@ -46,8 +57,17 @@ def start_game():
                 running = False
 
             elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_m:
+                    if music_playing:
+                        pygame.mixer.music.pause()
+                    else:
+                        pygame.mixer.music.unpause()
+                    music_playing = not music_playing
+
                 if event.key == pygame.K_SPACE and len(misiles) < 3:
                     misiles.append({"x": pos_x + 50, "y": pos_y})
+                    pygame.mixer.Sound.play(BULLET_SOUND)
+
                 if event.key in arrows:
                     moving = True
                     if event.key == pygame.K_DOWN:
@@ -82,6 +102,10 @@ def start_game():
                 if UFO.get_rect(topleft=(700, (600-50)/2)).colliderect(pygame.Rect(misile["x"], misile["y"], 10, 4)):
                     enemies.remove(enemy)
                     misiles.remove(misile)
+                    pygame.mixer.Sound.play(COLLISSION_SOUND)
+
+                    if len(enemies) == 0:
+                        pygame.mixer.Sound.play(FANFARE_SOUND)
 
         screen.blit(SPACESHIP, (pos_x, pos_y))
         for misile in misiles:
